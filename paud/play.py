@@ -35,7 +35,6 @@ class Play:
 
         winsound.PlaySound(self.data, winsound.SND_MEMORY | winsound.SND_NOSTOP)
 
-
     def linux(self):
         pass
 

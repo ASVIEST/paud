@@ -7,7 +7,9 @@ except ImportError:
 class Frame:
     def __init__(self, value):
         if isinstance(value, int):
-            self.value = int.to_bytes(value, length=self.bytes_needed(value), byteorder="little")
+            self.value = int.to_bytes(
+                value, length=self.bytes_needed(value), byteorder="little"
+            )
 
         elif isinstance(value, bytes):
             self.value = value
@@ -47,10 +49,12 @@ class Frame:
         if isinstance(other, int):
             return Audio(frames=[self] * other)
         else:
-            raise TypeError(f"can't multiply sequence by non-int of type '{type(other).__name__}'")
+            raise TypeError(
+                f"can't multiply sequence by non-int of type '{type(other).__name__}'"
+            )
 
     def __gt__(self, other):
-        return  self.value > other.value
+        return self.value > other.value
 
     def bytes_needed(self, n):
         if n == 0:

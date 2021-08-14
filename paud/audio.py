@@ -6,17 +6,23 @@ import wave
 import subprocess
 import copy
 
+import pathlib
+import io
+
 lib = "wave"
+
+
 def get_os():
     os = platform.system()
 
-    if os == 'Linux':
-        if subprocess.check_output(['uname', '-o']).strip() == b'Android':
-            return 'termux'
+    if os == "Linux":
+        if subprocess.check_output(["uname", "-o"]).strip() == b"Android":
+            return "termux"
         else:
-            return 'linux'
+            return "linux"
     else:
         return os.lower()
+
 
 class Audio:
     def __init__(self, *args, **kwargs):
@@ -31,30 +37,21 @@ class Audio:
 
         if "params" in kwargs:
             parameters = kwargs["params"]
-            #self.channels, self.sample_width, self.frame_rate, = (
-                #parameters[0],
-                #parameters[1],
-                #parameters[2],
-            #)
-
             self.channels, self.frame_rate, = (
                 parameters[0],
                 parameters[2],
             )
 
         else:
-            # if args or kwargs.get("sample_width"):
-            #     self.sample_width = kwargs.setdefault("sample_width", len(bytes(self.max())))
-            # else:
-            #     self.sample_width = 16
             self.frame_rate = kwargs.setdefault("frame_rate", 44.1 * 1000)
             self.channels = kwargs.setdefault("channels", 1)
 
-
-
     @classmethod
     def open(cls, file):
-        if isinstance(file, str):
+        if isinstance(file, pathlib.Path):
+            file = io.FileIO(file, "rb")
+
+        if isinstance(file, (str, pathlib.Path, io.IOBase)):
             with wave.open(file, "rb") as f:
                 sample_width = f.getsampwidth()
                 frame_rate = f.getframerate()
@@ -134,16 +131,20 @@ class Audio:
         elif isinstance(index, int):
             return self.frames[index]
         else:
-            raise TypeError(f"Audio indices must be integers or slices, not {type(index)}")
+            raise TypeError(
+                f"Audio indices must be integers or slices, not {type(index)}"
+            )
 
     def __setitem__(self, key, value):
         if isinstance(key, (slice, int)):
             if isinstance(value, Frame):
                 self.frames[key] = value
             else:
-                raise TypeError('Audio value must be Frame')
+                raise TypeError("Audio value must be Frame")
         else:
-            raise TypeError(f"Audio indices must be integers or slices, not {type(key)}")
+            raise TypeError(
+                f"Audio indices must be integers or slices, not {type(key)}"
+            )
 
     def __add__(self, other):
         frames = copy.deepcopy(self.frames)
@@ -159,7 +160,9 @@ class Audio:
         if isinstance(other, int):
             frames *= other
         else:
-            raise TypeError(f"can't multiply sequence by non-int of type '{type(other).__name__}'")
+            raise TypeError(
+                f"can't multiply sequence by non-int of type '{type(other).__name__}'"
+            )
 
         return Audio(frames=frames)
 
