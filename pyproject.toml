@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "paud"
+version = "0.1"
+description = "Python library to process audio"
+readme = "README.md"
+authors = ["ASVIEST <71895914+ASVIEST@users.noreply.github.com>"]
+license = "GPL-3.0-or-later"
+repository = "https://github.com/ASVIEST/paud"
+
+classifiers = [
+"Development Status :: 2 - Pre-Alpha"
+]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
+
+[tool.poetry.scripts]
