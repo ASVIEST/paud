@@ -5,11 +5,6 @@ from io import BytesIO
 
 
 class Play:
-    # enviroments = {
-    #     'termux': termux,
-    #     'windows': windows
-    # }
-
     def __init__(self, env, data):
         self.env = env
         self.data = data
