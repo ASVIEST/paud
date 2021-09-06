@@ -37,17 +37,25 @@ class Audio:
 
         if "params" in kwargs:
             parameters = kwargs["params"]
-            self.channels, self.frame_rate, = (
+            self.channels, self.sample_width, self.frame_rate, = (
                 parameters[0],
+                parameters[1],
                 parameters[2],
             )
 
         else:
             self.frame_rate = kwargs.setdefault("frame_rate", 44.1 * 1000)
             self.channels = kwargs.setdefault("channels", 1)
+            if args or kwargs:
+                self.sample_width = kwargs.setdefault(
+                    "sample_width", len(bytes(self.max()))
+                )
+            else:
+                self.sample_width = 2
 
     @classmethod
-    def open(cls, file):
+    def open(cls, file, old_reader=False):
+
         if isinstance(file, pathlib.Path):
             file = io.FileIO(file, "rb")
 
@@ -58,7 +66,16 @@ class Audio:
                 frame_count = f.getnframes()
                 channels = f.getnchannels()
 
-                frames = [Frame(f.readframes(1)) for i in range(frame_count)]
+                if old_reader:
+                    frames = [Frame(f.readframes(1)) for i in range(frame_count)]
+                else:
+                    frame_size = sample_width * channels
+
+                    content = f.readframes(frame_count)
+                    frames = [
+                        Frame(content[0 + i : frame_size + i])
+                        for i in range(0, frame_count * frame_size, frame_size)
+                    ]
 
         return cls(
             sample_width=sample_width,
@@ -68,7 +85,6 @@ class Audio:
             frame_count=frame_count,
         )
 
-    @property
     def duration(self):
         return self.frame_count / self.frame_rate
 
@@ -77,12 +93,16 @@ class Audio:
         return self.channels * self.sample_width
 
     @property
-    def sample_width(self):
-        default = 16
-        if self.frames:
-            return len(bytes(self.max()))
-        else:
-            return default
+    def peak_amplitude(self):
+        return 256 ** self.sample_width / 2
+
+    # @property
+    # def sample_width(self):
+    #     default = 16
+    #     if self.frames:
+    #         return len(bytes(self.max()))
+    #     else:
+    #         return default
 
     @property
     def frame_count(self):
