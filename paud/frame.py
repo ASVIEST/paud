@@ -14,12 +14,6 @@ class Frame:
         elif isinstance(value, bytes):
             self.value = value
 
-            # if len(value) == 2:
-            # self.value = value
-
-            # else:
-            # raise NameError
-
     def __int__(self):
         return int.from_bytes(self.value, byteorder="little")
 
@@ -56,7 +50,8 @@ class Frame:
     def __gt__(self, other):
         return self.value > other.value
 
-    def bytes_needed(self, n):
+    @staticmethod
+    def bytes_needed(n):
         if n == 0:
             return 1
         return int(log(n, 256)) + 1

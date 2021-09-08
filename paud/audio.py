@@ -4,7 +4,6 @@ from .libdata import ToData
 import platform
 import wave
 import subprocess
-import copy
 
 import pathlib
 import io
@@ -83,6 +82,7 @@ class Audio:
             frame_count=frame_count,
         )
 
+    @property
     def duration(self):
         return self.frame_count / self.frame_rate
 
@@ -155,24 +155,18 @@ class Audio:
             )
 
     def __add__(self, other):
-        frames = copy.deepcopy(self.frames)
         if isinstance(other, Frame):
-            frames.append(other)
+            return Audio(frames=self.frames + [other], params=self.params)
         elif isinstance(other, Audio):
-            frames.extend(other.frames)
-
-        return Audio(frames=frames)
+            return Audio(self.frames + other.frames, params=self.params)
 
     def __mul__(self, other):
-        frames = copy.deepcopy(self.frames)
         if isinstance(other, int):
-            frames *= other
+            return Audio(frames=self.frames * other, params=self.params)
         else:
             raise TypeError(
                 f"can't multiply sequence by non-int of type '{type(other).__name__}'"
             )
-
-        return Audio(frames=frames)
 
     def __gt__(self, other):
         return self.frames > other.frames
@@ -182,3 +176,6 @@ class Audio:
 
     def reverse(self):
         return Audio(frames=reversed(self.frames), params=self.params)
+
+    def ms_pos(self, ms):
+        return int(ms * (self.frame_rate / 1000))
