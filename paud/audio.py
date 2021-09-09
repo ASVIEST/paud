@@ -7,6 +7,7 @@ import subprocess
 
 import pathlib
 import io
+import math
 
 lib = "wave"
 
@@ -70,7 +71,7 @@ class Audio:
 
                 content = f.readframes(frame_count)
                 frames = [
-                    Frame(content[0 + i : frame_size + i])
+                    Frame(content[i : frame_size + i])
                     for i in range(0, frame_count * frame_size, frame_size)
                 ]
 
@@ -155,10 +156,20 @@ class Audio:
             )
 
     def __add__(self, other):
+        if other == 0:
+            return self
         if isinstance(other, Frame):
             return Audio(frames=self.frames + [other], params=self.params)
         elif isinstance(other, Audio):
             return Audio(self.frames + other.frames, params=self.params)
+
+    def __radd__(self, other):
+        if other == 0:
+            return self
+        else:
+            raise TypeError(
+                f"unsupported operand type(s) for +: '{type(other).__name__}' and 'Audio'"
+            )
 
     def __mul__(self, other):
         if isinstance(other, int):
@@ -172,10 +183,19 @@ class Audio:
         return self.frames > other.frames
 
     def __eq__(self, other):
-        return self.frames == other.frames
+        if isinstance(self, other.__class__):
+            return (self.frames, self.params) == (other.frames, other.params)
+        return False
 
     def reverse(self):
         return Audio(frames=reversed(self.frames), params=self.params)
+
+    def separate(self, n):
+        n = math.ceil(self.frame_count / n)
+        return tuple(
+            Audio(frames=self.frames[i : i + n], params=self.params)
+            for i in range(0, self.frame_count, n)
+        )
 
     def ms_pos(self, ms):
         return int(ms * (self.frame_rate / 1000))

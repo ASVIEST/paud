@@ -50,6 +50,11 @@ class Frame:
     def __gt__(self, other):
         return self.value > other.value
 
+    def __eq__(self, other):
+        if isinstance(self, other.__class__):
+            return self.value == other.value
+        return False
+
     @staticmethod
     def bytes_needed(n):
         if n == 0:
