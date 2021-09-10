@@ -1,6 +1,4 @@
-import wave
 import tempfile
-from io import BytesIO
 
 
 class Play:
@@ -8,14 +6,14 @@ class Play:
         self.env = env
         self.data = data
 
-        self.enviroments = {
+        self.available_env = {
             "termux": self.termux,
             "windows": self.windows,
             "linux": self.linux,
             "macos": self.macos,
         }
 
-        self.enviroments[self.env]()
+        self.available_env[self.env]()
 
     def termux(self):
         from termux import Media
