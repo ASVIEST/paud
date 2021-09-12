@@ -100,6 +100,10 @@ class Audio:
         return len(self.frames)
 
     @property
+    def data(self):
+        return ToData(self.frames, self.params, lib).data
+
+    @property
     def params(self):
         return (
             self.channels,
@@ -136,9 +140,18 @@ class Audio:
 
     def __getitem__(self, index):
         if isinstance(index, slice):
-            return Audio(self.frames[index], params=self.params)
+            return Audio(
+                self.frames[
+                    self.parse_index(index.start) : self.parse_index(
+                        index.stop
+                    ) : index.step
+                ],
+                params=self.params,
+            )
         elif isinstance(index, int):
             return self.frames[index]
+        elif isinstance(index, str):
+            return self.frames[self.ms_pos(self.parse_timestamp(index))]
         else:
             raise TypeError(
                 f"Audio indices must be integers or slices, not {type(index)}"
@@ -187,6 +200,9 @@ class Audio:
             return (self.frames, self.params) == (other.frames, other.params)
         return False
 
+    def __array__(self, dtype="float64"):
+        pass
+
     def reverse(self):
         return Audio(frames=reversed(self.frames), params=self.params)
 
@@ -199,3 +215,19 @@ class Audio:
 
     def ms_pos(self, ms):
         return int(ms * (self.frame_rate / 1000))
+
+    def parse_index(self, index):
+        return (
+            self.ms_pos(self.parse_timestamp(index))
+            if isinstance(index, str)
+            else index
+        )
+
+    @staticmethod
+    def parse_timestamp(string):
+        ms_time = [24 * 60 ** 2 * 1000, 60 ** 2 * 1000, 60 * 1000, 1000]
+        time = list(map(float, string.split(":")))
+        i = 0
+        while ms_time and time:
+            i += ms_time.pop() * time.pop()
+        return int(i)
