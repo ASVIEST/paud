@@ -70,10 +70,10 @@ class Audio:
                 frame_size = sample_width * channels
 
                 content = f.readframes(frame_count)
-                frames = [
-                    Frame(content[i : frame_size + i])
+                frames = map(Frame, [
+                    content[i : frame_size + i]
                     for i in range(0, frame_count * frame_size, frame_size)
-                ]
+                ])
 
         return cls(
             sample_width=sample_width,

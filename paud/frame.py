@@ -4,15 +4,23 @@ except ImportError:
     from math import log
 
 
-class Frame:
-    def __init__(self, value):
-        if isinstance(value, int):
-            self.value = int.to_bytes(
-                value, length=self.bytes_needed(value), byteorder="little"
-            )
+def bytes_needed(n):
+    if n == 0:
+        return 1
+    return int(log(n, 256)) + 1
 
-        elif isinstance(value, bytes):
+
+class Frame:
+    __slots__ = 'value'
+
+    def __init__(self, value):
+        if isinstance(value, bytes):
             self.value = value
+
+        elif isinstance(value, int):
+            self.value = int.to_bytes(
+                value, length=bytes_needed(value), byteorder="little"
+            )
 
     def __int__(self):
         return int.from_bytes(self.value, byteorder="little")
@@ -25,9 +33,6 @@ class Frame:
 
     def __repr__(self):
         return f"Frame({self.__str__()})"
-
-    def __reversed__(self):
-        pass
 
     def __add__(self, other):
         from .audio import Audio
@@ -54,9 +59,3 @@ class Frame:
         if isinstance(self, other.__class__):
             return self.value == other.value
         return False
-
-    @staticmethod
-    def bytes_needed(n):
-        if n == 0:
-            return 1
-        return int(log(n, 256)) + 1
