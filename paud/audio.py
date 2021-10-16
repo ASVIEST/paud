@@ -1,13 +1,14 @@
-from .frame import Frame
-from .play import Play
-from .libdata import ToData
-import platform
-import wave
-import subprocess
-
-import pathlib
 import io
 import math
+import platform
+import subprocess
+import wave
+from os import PathLike
+
+from .frame import Frame
+from .frames import DataFrames
+from .libdata import ToData
+from .play import Play
 
 lib = "wave"
 
@@ -34,7 +35,10 @@ class Audio:
         )
 
         if "frames" in kwargs:
-            self.frames.extend(kwargs["frames"])
+            if isinstance(kwargs["frames"], DataFrames):
+                self.frames = kwargs["frames"]  # .append(kwargs["frames"])
+            else:
+                self.frames.extend(kwargs["frames"])
 
         if "params" in kwargs:
             parameters = kwargs["params"]
@@ -47,20 +51,15 @@ class Audio:
         else:
             self.frame_rate = kwargs.setdefault("frame_rate", 44.1 * 1000)
             self.channels = kwargs.setdefault("channels", 1)
-            if args or kwargs.get("sample_width"):
-                self.sample_width = kwargs.setdefault(
-                    "sample_width", len(bytes(self.max()))
-                )
+            if kwargs.get("sample_width"):
+                self.sample_width = kwargs["sample_width"]
             else:
-                self.sample_width = 2
+                self.sample_width = len(bytes(self.max()))
 
     @classmethod
-    def open(cls, file):
+    def open(cls, file, lazy=True):
 
-        if isinstance(file, pathlib.Path):
-            file = io.FileIO(file, "rb")
-
-        if isinstance(file, (str, pathlib.Path, io.IOBase)):
+        if isinstance(file, (str, PathLike, io.IOBase)):
             with wave.open(file, "rb") as f:
                 sample_width = f.getsampwidth()
                 frame_rate = f.getframerate()
@@ -70,10 +69,14 @@ class Audio:
                 frame_size = sample_width * channels
 
                 content = f.readframes(frame_count)
-                frames = map(Frame, [
-                    content[i : frame_size + i]
-                    for i in range(0, frame_count * frame_size, frame_size)
-                ])
+
+                if lazy:
+                    frames = DataFrames(content, frame_size)
+                else:
+                    frames = [
+                        Frame(content[i : frame_size + i])
+                        for i in range(0, frame_count * frame_size, frame_size)
+                    ]
 
         return cls(
             sample_width=sample_width,
@@ -101,6 +104,8 @@ class Audio:
 
     @property
     def data(self):
+        if isinstance(self.frames, DataFrames):
+            return self.frames.data
         return ToData(self.frames, self.params, lib).data
 
     @property
