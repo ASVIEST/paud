@@ -1,4 +1,5 @@
 from math import ceil
+from audioop import reverse
 
 from .frame import Frame
 
@@ -38,10 +39,7 @@ class DataFrames:
 
     def __reversed__(self):
         return DataFrames(
-            b"".join(
-                self.data[i : i + self.frame_width]
-                for i in reversed(range(0, len(self.data), self.frame_width))
-            ),
+            reverse(self.data, self.frame_width),
             self.frame_width,
         )
 
