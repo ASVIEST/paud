@@ -205,8 +205,22 @@ class Audio:
             return (self.frames, self.params) == (other.frames, other.params)
         return False
 
-    def __array__(self, dtype="float64"):
-        pass
+    def __array__(self, dtype="int16"):  # "float32"):
+        import numpy as np
+
+        dtype = np.dtype(dtype)
+
+        max_ = 1 << (8 * self.sample_width - 1)
+
+        arr = np.frombuffer(self.data, dtype=f"int{self.sample_width * 8}")
+
+        if dtype.kind in "iu" and dtype != arr.dtype:
+            arr = arr * (np.iinfo(dtype).max + 1) / max_
+
+        if dtype.kind == "f":
+            arr = (arr / max_).astype(dtype)
+
+        return arr.reshape((-1, self.channels))
 
     def reverse(self):
         return Audio(frames=reversed(self.frames), params=self.params)

@@ -11,7 +11,7 @@ def bytes_needed(n):
 
 
 class Frame:
-    __slots__ = 'value'
+    __slots__ = "value"
 
     def __init__(self, value):
         if isinstance(value, bytes):
