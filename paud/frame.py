@@ -53,7 +53,7 @@ class Frame:
             )
 
     def __gt__(self, other):
-        return self.value > other.value
+        return int(self) > int(other)
 
     def __eq__(self, other):
         if isinstance(self, other.__class__):
