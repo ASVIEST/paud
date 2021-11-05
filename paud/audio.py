@@ -4,11 +4,14 @@ import platform
 import subprocess
 import wave
 from os import PathLike
+from base64 import b64encode
+from multiprocessing import Pool
 
 from .frame import Frame
 from .frames import DataFrames
 from .libdata import ToData
 from .play import Play
+
 
 lib = "wave"
 
@@ -25,10 +28,14 @@ def get_os():
         return os.lower()
 
 
+def get_item_frame(i):
+    return i.__audio_data__() if hasattr(i, "__audio_data__") else bytes(i)
+
+
 class Audio:
     def __init__(self, *args, **kwargs):
 
-        self.frames = (
+        self._frames = (
             list(args[0])
             if len(args) == 1 and isinstance(args[0], (list, tuple))
             else list(args)
@@ -36,9 +43,9 @@ class Audio:
 
         if "frames" in kwargs:
             if isinstance(kwargs["frames"], DataFrames):
-                self.frames = kwargs["frames"]  # .append(kwargs["frames"])
+                self._frames.append(kwargs["frames"])
             else:
-                self.frames.extend(kwargs["frames"])
+                self._frames.extend(kwargs["frames"])
 
         if "params" in kwargs:
             parameters = kwargs["params"]
@@ -87,6 +94,10 @@ class Audio:
         )
 
     @property
+    def frames(self):
+        return self.compute(len(self._frames) <= 5)
+
+    @property
     def duration(self):
         return self.frame_count / self.frame_rate
 
@@ -104,8 +115,8 @@ class Audio:
 
     @property
     def data(self):
-        if isinstance(self.frames, DataFrames):
-            return self.frames.data
+        #if isinstance(self.frames, DataFrames):
+        #    return self.frames.data
         return ToData(self.frames, self.params, lib).data
 
     @property
@@ -177,7 +188,7 @@ class Audio:
         if other == 0:
             return self
         if isinstance(other, Frame):
-            return Audio(frames=self.frames + [other], params=self.params)
+            return Audio(frames=self.frames + other, params=self.params)
         elif isinstance(other, Audio):
             return Audio(self.frames + other.frames, params=self.params)
 
@@ -240,6 +251,17 @@ class Audio:
             self.ms_pos(self.parse_timestamp(index))
             if isinstance(index, str)
             else index
+        )
+
+    def compute(self, parallel=True):
+        if parallel:
+            with Pool() as pool:
+                return DataFrames(
+                    b"".join(pool.map(get_item_frame, self._frames)), self.frame_width
+                )
+        return DataFrames(
+            b"".join([get_item_frame(i) for i in self._frames]),
+            self.frame_width,
         )
 
     @staticmethod

@@ -43,6 +43,15 @@ class DataFrames:
             self.frame_width,
         )
 
+    def __add__(self, other):
+        return DataFrames(self.data + bytes(other), self.frame_width)
+
+    def __mul__(self, other):
+        return DataFrames(self.data * other, self.frame_width)
+
+    def __audio_data__(self):
+        return self.data
+
     def get_frame(self, index):
         return Frame(
             self.data[index * self.frame_width : (index + 1) * self.frame_width]
@@ -53,3 +62,14 @@ class DataFrames:
 
     def max(self):
         return max(self.data)
+
+    def append(self, frame):
+        self.data += bytes(frame)
+
+    def extend(self, frames):
+        self.data += b"".join(frames)
+
+
+class ArrayFrames:
+    def __init__(self):
+        return
