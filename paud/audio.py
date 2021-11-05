@@ -117,6 +117,7 @@ class Audio:
     def data(self):
         return ToData(self.frames, self.params, lib).data
 
+    @property
     def b64data(self):
         return b64encode(self.data)
 
@@ -233,6 +234,14 @@ class Audio:
             arr = (arr / max_).astype(dtype)
 
         return arr.reshape((-1, self.channels))
+
+    def _repr_html_(self):
+        return f"""
+        <audio controls="controls">
+            <source src="data:audio/wav;base64,{self.b64data.decode()}" type="audio/wav"/>
+            Your browser does not support the audio element
+        </audio>
+        """
 
     def reverse(self):
         return Audio(frames=reversed(self.frames), params=self.params)
