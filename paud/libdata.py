@@ -18,9 +18,7 @@ class ToData:
         with BytesIO() as f:
             with wave.open(f, "wb") as wav:
                 wav.setparams(self.params)
-
-                for i in range(self.params[3]):
-                    wav.writeframes(bytes(self.frames[i]))
+                wav.writeframes(self.frames.data)
 
             f.seek(0)
             data = f.read()
