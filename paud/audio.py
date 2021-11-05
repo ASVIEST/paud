@@ -115,9 +115,10 @@ class Audio:
 
     @property
     def data(self):
-        #if isinstance(self.frames, DataFrames):
-        #    return self.frames.data
         return ToData(self.frames, self.params, lib).data
+
+    def b64data(self):
+        return b64encode(self.data)
 
     @property
     def params(self):
