@@ -1,5 +1,6 @@
-from math import ceil
+import struct
 from audioop import reverse
+from math import ceil
 
 from .frame import Frame
 
@@ -56,6 +57,12 @@ class DataFrames:
         return Frame(
             self.data[index * self.frame_width : (index + 1) * self.frame_width]
         )
+
+    def drop_frame(self, index):
+        self.data = b"%b%b" % (self.data[:index * self.frame_width], self.data[(index + 1) * self.frame_width:])
+
+    def set_frame(self, index, frame):
+        self.data = b"%b%b%b" % (self.data[:index * self.frame_width], frame, self.data[(index + 1) * self.frame_width:])
 
     def min(self):
         return min(self.data)

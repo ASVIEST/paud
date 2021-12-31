@@ -1,23 +1,22 @@
 import io
 import math
-import platform
 import subprocess
 import wave
-from os import PathLike
 from base64 import b64encode
 from multiprocessing import Pool
+from os import PathLike
+from platform import system
 
 from .frame import Frame
 from .frames import DataFrames
 from .libdata import ToData
 from .play import Play
 
-
 lib = "wave"
 
 
 def get_os():
-    os = platform.system()
+    os = system()
 
     if os == "Linux":
         if subprocess.check_output(["uname", "-o"]).strip() == b"Android":
@@ -30,6 +29,9 @@ def get_os():
 
 def get_item_frame(i):
     return i.__audio_data__() if hasattr(i, "__audio_data__") else bytes(i)
+
+
+OS = get_os()
 
 
 class Audio:
@@ -134,7 +136,7 @@ class Audio:
 
     def play(self):
         Play(
-            get_os(),
+            OS,
             ToData(self.frames, self.params, lib).data,
         )
 
@@ -264,7 +266,7 @@ class Audio:
         )
 
     def compute(self, parallel=True):
-        if parallel:
+        if parallel and OS != "termux":
             with Pool() as pool:
                 return DataFrames(
                     b"".join(pool.map(get_item_frame, self._frames)), self.frame_width
