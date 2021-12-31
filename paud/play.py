@@ -16,11 +16,15 @@ class Play:
         self.available_env[self.env]()
 
     def termux(self):
-        from termux import Media
+        from subprocess import Popen, PIPE
 
         with tempfile.NamedTemporaryFile() as temp:
             temp.write(self.data)
-            Media.play(temp.name)
+            Popen(
+                ("termux-media-player", "play", temp.name),
+                stdout=PIPE,
+                shell=False
+            )
 
     def windows(self):
         import winsound
